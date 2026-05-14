@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emilia Bazan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;1,300;1,400&family=Karla:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --white: #fafaf8;
+      --black: #0e0e0e;
+      --mid: #8a8a84;
+      --light: #e8e8e4;
+      --accent: #c8b89a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--white);
+      color: var(--black);
+      font-family: 'Karla', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      cursor: default;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem 3rem;
+      background: var(--white);
+    }
+
+    .nav-name {
+      font-family: 'Cormorant', serif;
+      font-weight: 300;
+      font-size: 1.15rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.3s;
+    }
+    .nav-name:hover { opacity: 0.5; }
+
+    /* ── DROPDOWN MENU ── */
+    .nav-menu {
+      position: relative;
+    }
+
+    .nav-menu-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 4px;
+      align-items: flex-end;
+    }
+
+    .nav-menu-toggle span {
+      display: block;
+      height: 1px;
+      background: var(--black);
+      transition: all 0.3s;
+    }
+    .nav-menu-toggle span:nth-child(1) { width: 24px; }
+    .nav-menu-toggle span:nth-child(2) { width: 16px; }
+    .nav-menu-toggle span:nth-child(3) { width: 20px; }
+
+    .nav-menu-toggle:hover span { background: var(--mid); }
+    .nav-menu.open .nav-menu-toggle span:nth-child(2) { opacity: 0; }
+    .nav-menu.open .nav-menu-toggle span:nth-child(1) { width: 20px; transform: translateY(6px) rotate(45deg); }
+    .nav-menu.open .nav-menu-toggle span:nth-child(3) { width: 20px; transform: translateY(-6px) rotate(-45deg); }
+
+    .nav-dropdown {
+      position: absolute;
+      top: calc(100% + 1.2rem);
+      right: 0;
+      background: var(--white);
+      border: 1px solid var(--light);
+      list-style: none;
+      min-width: 160px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-8px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .nav-menu.open .nav-dropdown {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+
+    .nav-dropdown li a {
+      display: block;
+      padding: 0.9rem 1.5rem;
+      font-family: 'Karla', sans-serif;
+      font-weight: 300;
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--black);
+      transition: color 0.2s, background 0.2s;
+      border-bottom: 1px solid var(--light);
+    }
+    .nav-dropdown li:last-child a { border-bottom: none; }
+    .nav-dropdown li a:hover { color: var(--mid); background: var(--light); }
+    .nav-dropdown li a.active { color: var(--mid); }
+
+    /* ── NAV LINKS (kept for JS compat) ── */
+    .nav-links { display: none; }
+
+    /* ── PAGES ── */
+    .page { display: none; min-height: 100vh; padding-top: 6rem; }
+    .page.visible { display: block; }
+
+    /* ── HOME CAROUSEL ── */
+    .home-carousel {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .carousel-slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 1.8s ease;
+    }
+
+    .carousel-slide.active { opacity: 1; }
+
+    .carousel-slide img,
+    .carousel-slide .art-placeholder {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .carousel-slide .art-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .carousel-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to right,
+        rgba(250,250,248,0.82) 0%,
+        rgba(250,250,248,0.55) 55%,
+        rgba(250,250,248,0.15) 100%
+      );
+      z-index: 1;
+    }
+
+    #home {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 3rem;
+      min-height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+    #home.visible { display: flex; }
+
+    .home-inner {
+      max-width: 640px;
+      margin-left: 8vw;
+      animation: fadeUp 1s ease both;
+      position: relative;
+      z-index: 2;
+    }
+
+    .home-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-bottom: 2rem;
+    }
+
+    .home-title {
+      font-family: 'Cormorant', serif;
+      font-weight: 300;
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      margin-bottom: 2.5rem;
+    }
+
+    .home-title em {
+      font-style: italic;
+      color: var(--mid);
+    }
+
+    .home-bio {
+      font-size: 0.95rem;
+      line-height: 1.9;
+      color: #555;
+      max-width: 420px;
+      margin-bottom: 3rem;
+    }
+
+    .home-actions {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      font-family: 'Karla', sans-serif;
+      font-weight: 300;
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 0.9rem 2rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-dark {
+      background: var(--black);
+      color: var(--white);
+    }
+    .btn-dark:hover {
+      background: #333;
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--black);
+      border: 1px solid var(--black);
+    }
+    .btn-outline:hover {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .instagram-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--mid);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .instagram-link:hover { color: var(--black); }
+    .instagram-link svg { width: 16px; height: 16px; }
+
+    .home-deco {
+      position: absolute;
+      right: 6vw;
+      bottom: 10vh;
+      width: 1px;
+      height: 120px;
+      background: var(--light);
+      animation: fadeUp 1.5s ease both 0.3s;
+      z-index: 2;
+    }
+
+    .home-deco::before {
+      content: 'scroll';
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%) rotate(90deg);
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--light);
+      white-space: nowrap;
+    }
+
+    /* ── PORTFOLIO ── */
+    #portfolio { padding: 8rem 3rem 5rem; }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 4rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--light);
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .page-title {
+      font-family: 'Cormorant', serif;
+      font-weight: 300;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      letter-spacing: -0.01em;
+    }
+
+    .page-subtitle {
+      font-size: 0.72rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--mid);
+    }
+
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1px;
+      background: var(--light);
+      animation: fadeUp 0.8s ease both 0.1s;
+    }
+
+    .portfolio-item {
+      background: var(--white);
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 4/3;
+    }
+
+    .portfolio-item-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease, filter 0.4s ease;
+    }
+
+    .portfolio-item:hover .portfolio-item-img {
+      transform: scale(1.03);
+      filter: brightness(0.85);
+    }
+
+    .portfolio-item-info {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 1.5rem;
+      background: linear-gradient(transparent, rgba(14,14,14,0.6));
+      opacity: 0;
+      transition: opacity 0.4s;
+      color: white;
+    }
+
+    .portfolio-item:hover .portfolio-item-info { opacity: 1; }
+
+    .portfolio-item-title {
+      font-family: 'Cormorant', serif;
+      font-size: 1.1rem;
+      font-weight: 300;
+      font-style: italic;
+    }
+
+    .portfolio-item-meta {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0.75;
+      margin-top: 0.25rem;
+    }
+
+    /* Placeholder artwork tiles */
+    .art-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.6s ease;
+    }
+    .portfolio-item:hover .art-placeholder { transform: scale(1.03); }
+
+    /* ── FOR SALE ── */
+    #forsale { padding: 8rem 3rem 5rem; }
+
+    .sale-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 3rem;
+      animation: fadeUp 0.8s ease both 0.1s;
+    }
+
+    .sale-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sale-item-image {
+      aspect-ratio: 3/4;
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+    }
+
+    .sale-item-image .art-placeholder {
+      height: 100%;
+    }
+
+    .sale-item-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+
+    .sale-item:hover .art-placeholder { transform: scale(1.03); }
+
+    .sale-item-details {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .sale-item-name {
+      font-family: 'Cormorant', serif;
+      font-size: 1.1rem;
+      font-weight: 300;
+      font-style: italic;
+    }
+
+    .sale-item-size {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      color: var(--mid);
+      margin-top: 0.2rem;
+    }
+
+    .sale-item-price {
+      font-family: 'Cormorant', serif;
+      font-size: 1.1rem;
+      font-weight: 300;
+      color: var(--black);
+      white-space: nowrap;
+    }
+
+    .sale-item-enquire {
+      margin-top: 1rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mid);
+      text-decoration: none;
+      transition: color 0.3s;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: 'Karla', sans-serif;
+    }
+    .sale-item-enquire:hover { color: var(--black); }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 3rem;
+      border-top: 1px solid var(--light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 5rem;
+    }
+
+    .footer-name {
+      font-family: 'Cormorant', serif;
+      font-weight: 300;
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+    }
+
+    .footer-copy {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: var(--mid);
+    }
+
+    /* ── PLACEHOLDER ART COLOURS ── */
+    .c1 { background: #e8e2d8; }
+    .c2 { background: #d6cfc4; }
+    .c3 { background: #c8b89a; }
+    .c4 { background: #b8a890; }
+    .c5 { background: #d4d0c8; }
+    .c6 { background: #e0dbd0; }
+    .c7 { background: #ccc5b8; }
+    .c8 { background: #ddd6c8; }
+
+    .art-mark {
+      font-family: 'Cormorant', serif;
+      font-style: italic;
+      font-size: 1.2rem;
+      color: rgba(0,0,0,0.2);
+      letter-spacing: 0.05em;
+      user-select: none;
+    }
+
+    /* ── CONTACT ── */
+    #contact { padding: 8rem 3rem 5rem; }
+
+    .contact-body {
+      max-width: 560px;
+      animation: fadeUp 0.8s ease both 0.1s;
+    }
+
+    .contact-body p {
+      font-size: 0.95rem;
+      line-height: 1.9;
+      color: #555;
+      margin-bottom: 2.5rem;
+    }
+
+    .contact-socials {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 600px) {
+      nav { padding: 1.5rem; }
+      .nav-links { gap: 1.5rem; }
+      .home-inner { margin-left: 0; }
+      #portfolio, #forsale { padding: 7rem 1.5rem 3rem; }
+      footer { padding: 2rem 1.5rem; flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-name" onclick="showPage('home')">Emilia Bazan</div>
+    <!-- hidden list kept for JS active-link targeting -->
+    <ul class="nav-links">
+      <li><a href="#" onclick="showPage('portfolio'); return false;" id="nav-portfolio">Portfolio</a></li>
+      <li><a href="#" onclick="showPage('forsale'); return false;" id="nav-forsale">For Sale</a></li>
+      <li><a href="#" onclick="showPage('contact'); return false;" id="nav-contact">Contact</a></li>
+    </ul>
+    <!-- visible dropdown -->
+    <div class="nav-menu" id="navMenu">
+      <button class="nav-menu-toggle" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-dropdown">
+        <li><a href="#" onclick="showPage('portfolio'); closeMenu(); return false;" id="dd-portfolio">Portfolio</a></li>
+        <li><a href="#" onclick="showPage('forsale'); closeMenu(); return false;" id="dd-forsale">For Sale</a></li>
+        <li><a href="#" onclick="showPage('contact'); closeMenu(); return false;" id="dd-contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- HOME -->
+<section class="page" id="home">
+    <!-- Background carousel -->
+    <div class="home-carousel">
+      <div class="carousel-slide active">
+        <img src="AtLowTide.jpg" alt="At Low Tide">
+      </div>
+      <div class="carousel-slide">
+        <img src="Flowers~2.jpg" alt="Flowers">
+      </div>
+      <div class="carousel-slide">
+        <div class="art-placeholder c3"></div>
+      </div>
+      <div class="carousel-overlay"></div>
+    </div>
+
+    <div class="home-inner">
+      <p class="home-label">Fine Artist — Cambridge, UK</p>
+      <h1 class="home-title">
+        Painting the<br>
+        <em>world</em> she sees
+      </h1>
+      <p class="home-bio">
+        Original works in oil, acrylic, and mixed media.<br>
+        Commissions welcome.
+      </p>
+      <div class="home-actions">
+        <button class="btn btn-dark" onclick="showPage('portfolio')">View Work</button>
+        <button class="btn btn-outline" onclick="showPage('forsale')">Available Pieces</button>
+        
+        <a class="instagram-link" href="https://www.instagram.com/emiliabazan.art" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+            </svg>
+            @emiliabazan.art
+          </a>
+          <a class="instagram-link" href="https://www.tiktok.com/@art_by_emmiii" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.75a8.16 8.16 0 0 0 4.78 1.52V6.82a4.85 4.85 0 0 1-1.01-.13z"/>
+            </svg>
+            @art_by_emmiii
+          </a>
+      </div>
+    </div>
+    <div class="home-deco"></div>
+</section>
+
+  <!-- PORTFOLIO -->
+  <section class="page" id="portfolio">
+    <div class="page-header">
+      <h2 class="page-title">Portfolio</h2>
+      <span class="page-subtitle">Selected Works</span>
+    </div>
+
+    <div class="portfolio-grid">
+
+      <div class="portfolio-item">
+        <img class="portfolio-item-img" src="AtLowTide.jpg" alt="[At Low Tide]">
+        <div class="portfolio-item-info">
+          <div class="portfolio-item-title">At Low Tide</div>
+          <div class="portfolio-item-meta">Oil on canvas · 2026</div>
+        </div>
+      </div>
+
+      <div class="portfolio-item">
+        <img class="portfolio-item-img" src="Flowers~2.jpg" alt="[Flowers]">
+        <div class="portfolio-item-info">
+          <div class="portfolio-item-title">Flowers</div>
+          <div class="portfolio-item-meta">Mixed media · 2024</div>
+        </div>
+      </div>
+
+      <div class="portfolio-item">
+        <div class="art-placeholder c5"><span class="art-mark">III</span></div>
+        <div class="portfolio-item-info">
+          <div class="portfolio-item-title">Title 3</div>
+          <div class="portfolio-item-meta">Acrylic on canvas · 2023</div>
+        </div>
+      </div>
+
+      <div class="portfolio-item">
+        <div class="art-placeholder c2"><span class="art-mark">IV</span></div>
+        <div class="portfolio-item-info">
+          <div class="portfolio-item-title">Title 4 </div>
+          <div class="portfolio-item-meta">Oil on board · 2023</div>
+        </div>
+      </div>
+
+      <div class="portfolio-item">
+        <div class="art-placeholder c7"><span class="art-mark">V</span></div>
+        <div class="portfolio-item-info">
+          <div class="portfolio-item-title">Title 5</div>
+          <div class="portfolio-item-meta">Mixed media · 2023</div>
+        </div>
+      </div>
+
+      <div class="portfolio-item">
+        <div class="art-placeholder c4"><span class="art-mark">VI</span></div>
+        <div class="portfolio-item-info">
+          <div class="portfolio-item-title">Title 6</div>
+          <div class="portfolio-item-meta">Acrylic on linen · 2022</div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer>
+      <span class="footer-name">Emilia Bazan</span>
+      <span class="footer-copy">© 2026 · All rights reserved</span>
+    </footer>
+  </section>
+
+  <!-- FOR SALE -->
+  <section class="page" id="forsale">
+    <div class="page-header">
+      <h2 class="page-title">Available</h2>
+      <span class="page-subtitle">Original Works For Sale</span>
+    </div>
+
+    <div class="sale-grid">
+
+      <div class="sale-item">
+        <div class="sale-item-image">
+          <div class="art-placeholder c3"><span class="art-mark">I</span></div>
+        </div>
+        <div class="sale-item-details">
+          <div>
+            <div class="sale-item-name">The Air She Breathes</div>
+            <div class="sale-item-size">Mixed media · 60 × 80 cm</div>
+          </div>
+          <div class="sale-item-price">£999,999,999</div>
+        </div>
+        <a class="sale-item-enquire" href="https://www.instagram.com/emiliabazan.art" target="_blank">Enquire →</a>
+      </div>
+
+      <div class="sale-item">
+        <div class="sale-item-image">
+          <div class="art-placeholder c6"><span class="art-mark">II</span></div>
+        </div>
+        <div class="sale-item-details">
+          <div>
+            <div class="sale-item-name">The Ground She Walks Upon</div>
+            <div class="sale-item-size">Oil on board · 30 × 40 cm</div>
+          </div>
+          <div class="sale-item-price">Open To Offers</div>
+        </div>
+        <a class="sale-item-enquire" href="https://www.instagram.com/emiliabazan.art" target="_blank">Enquire →</a>
+      </div>
+
+      <div class="sale-item">
+        <div class="sale-item-image">
+          <div class="art-placeholder c8"><span class="art-mark">III</span></div>
+        </div>
+        <div class="sale-item-details">
+          <div>
+            <div class="sale-item-name">The Stars She Blesses with Her Gaze</div>
+            <div class="sale-item-size">Acrylic on canvas · 50 × 70 cm</div>
+          </div>
+          <div class="sale-item-price">£∞</div>
+        </div>
+        <a class="sale-item-enquire" href="https://www.instagram.com/emiliabazan.art" target="_blank">Enquire →</a>
+      </div>
+
+    </div>
+
+    <footer>
+      <span class="footer-name">Emilia Bazan</span>
+      <span class="footer-copy">© 2026 · All rights reserved</span>
+    </footer>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="page" id="contact">
+    <div class="page-header">
+      <h2 class="page-title">Contact</h2>
+      <span class="page-subtitle">Get in Touch</span>
+    </div>
+
+    <div class="contact-body">
+      <p>
+        For commissions, enquiries, or just to say hello — reach out via Instagram or TikTok, or drop an email below.
+      </p>
+
+      <div class="contact-socials">
+        <a class="instagram-link" href="https://www.instagram.com/emiliabazan.art" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+            <circle cx="12" cy="12" r="4"/>
+            <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+          </svg>
+          @emiliabazan.art
+        </a>
+        <a class="instagram-link" href="https://www.tiktok.com/@art_by_emmiii" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.75a8.16 8.16 0 0 0 4.78 1.52V6.82a4.85 4.85 0 0 1-1.01-.13z"/>
+          </svg>
+          @art_by_emmiii
+        </a>
+      </div>
+    </div>
+
+    <footer>
+      <span class="footer-name">Emilia Bazan</span>
+      <span class="footer-copy">© 2026 · All rights reserved</span>
+    </footer>
+  </section>
+
+  <script>
+    // ── PAGE ROUTING ──
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('visible'));
+      document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+      document.querySelectorAll('.nav-dropdown a').forEach(a => a.classList.remove('active'));
+      document.getElementById(id).classList.add('visible');
+      const navEl = document.getElementById('nav-' + id);
+      if (navEl) navEl.classList.add('active');
+      const ddEl = document.getElementById('dd-' + id);
+      if (ddEl) ddEl.classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    // ── DROPDOWN ──
+    function toggleMenu() {
+      document.getElementById('navMenu').classList.toggle('open');
+    }
+    function closeMenu() {
+      document.getElementById('navMenu').classList.remove('open');
+    }
+    document.addEventListener('click', function(e) {
+      const menu = document.getElementById('navMenu');
+      if (!menu.contains(e.target)) closeMenu();
+    });
+
+    // ── CAROUSEL ──
+    (function() {
+      const slides = document.querySelectorAll('.carousel-slide');
+      let current = 0;
+      const duration = 4000; // ms each slide shows
+      const fade = 1800;     // ms fade (matches CSS transition)
+
+      function next() {
+        slides[current].classList.remove('active');
+        current = (current + 1) % slides.length;
+        slides[current].classList.add('active');
+      }
+
+      setInterval(next, duration + fade / 2);
+    })();
+
+    showPage('home');
+  </script>
+</body>
+</html>
