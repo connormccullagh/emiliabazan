@@ -550,14 +550,13 @@
     /* ── ABOUT ── */
     #about { padding: 0 0 5rem; }
 
-    .about-banner {
-      width: 100%;
-      height: clamp(220px, 38vw, 480px);
-      background: var(--light);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    banner-image {
+    width: 100%;
+    height: 100%;
+    /* 'cover' ensures the container is filled; 'center' keeps the middle of the photo visible */
+    object-fit: cover;
+    object-position: center;
+    display: block;
     }
     .about-banner img { width: 100%; height: 100%; object-fit: cover; }
     .about-banner-placeholder {
@@ -841,7 +840,6 @@
     src="WhatsApp Image 2026-05-16 at 11.55.11.jpg" 
     alt="Landscape banner"
     class="about-banner-image">
-        <span>Landscape banner image — recommended 1600 × 600 px</span>
       </div>
     </div>
 
